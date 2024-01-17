@@ -1,11 +1,9 @@
 #pragma once
 
-#define LEDC_TIMER LEDC_TIMER_0
-#define LEDC_MODE LEDC_LOW_SPEED_MODE
-#define LEDC_OUTPUT_IO (46)
-#define LEDC_CHANNEL LEDC_CHANNEL_0
-#define LEDC_DUTY_RES LEDC_TIMER_6_BIT
-#define LEDC_DUTY (40)
-#define LEDC_FREQUENCY (800000)
+#define GPIO_NUM            46
+#define RESOLUTION_HZ       (10 * 1000 * 1000)        // 10 MHz, 1 tick = 0.1 µs
+#define MEM_BLOCK_SYMBOLS   64
+#define TX_QUEUE_DEPTH      4
+#define INTR_PRIORITY       0
 
 void on(void);
