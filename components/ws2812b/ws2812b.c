@@ -1,15 +1,27 @@
 #include "ws2812b.h"
 #include "driver/gpio.h"
 #include "driver/rmt_tx.h"
+#include <stdint.h>
+
+#define RESOLUTION_HZ (10 * 1000 * 1000)  // 10 MHz, 1 tick = 0.1 µs
+#define MEM_BLOCK_SYMBOLS 48
+#define TX_QUEUE_DEPTH 4
+#define INTR_PRIORITY 0
+
+#define BIT0H 4
+#define BIT0L 8
+#define BIT1H 8
+#define BIT1L 4
 
 void get_tx_channel(rmt_channel_handle_t* tx_channel) {
-    static rmt_tx_channel_config_t tx_channel_config = {
+    static const rmt_tx_channel_config_t tx_channel_config = {
         .gpio_num = GPIO_NUM,
         .clk_src = RMT_CLK_SRC_DEFAULT,
         .resolution_hz = RESOLUTION_HZ,
         .mem_block_symbols = MEM_BLOCK_SYMBOLS,
         .trans_queue_depth = TX_QUEUE_DEPTH,
         .intr_priority = INTR_PRIORITY,
+
         .flags.invert_out = false,
         .flags.io_loop_back = false,
         .flags.io_od_mode = false,
@@ -20,7 +32,7 @@ void get_tx_channel(rmt_channel_handle_t* tx_channel) {
 }
 
 void get_encoder(rmt_encoder_handle_t* encoder) {
-    static rmt_bytes_encoder_config_t bytes_encoder_config = {
+    static const rmt_bytes_encoder_config_t bytes_encoder_config = {
         .bit0.duration0 = BIT0H,
         .bit0.level0 = 1,
         .bit0.duration1 = BIT0L,
@@ -34,7 +46,8 @@ void get_encoder(rmt_encoder_handle_t* encoder) {
         .flags.msb_first = true,
     };
 
-    ESP_ERROR_CHECK(rmt_new_bytes_encoder(&bytes_encoder_config, encoder));
+    rmt_encoder_handle_t bytes_encoder = NULL;
+    ESP_ERROR_CHECK(rmt_new_bytes_encoder(&bytes_encoder_config, &bytes_encoder));
 }
 
 void transmit(rmt_channel_handle_t* tx_channel, rmt_encoder_handle_t* encoder) {
@@ -43,7 +56,7 @@ void transmit(rmt_channel_handle_t* tx_channel, rmt_encoder_handle_t* encoder) {
         .flags.eot_level = 0,
     };
 
-    uint8_t payload[3] = {0, 255, 0};
+    uint8_t payload[3] = {0, 255, 255};
 
     ESP_ERROR_CHECK(rmt_enable(*tx_channel));
     ESP_ERROR_CHECK(rmt_transmit(*tx_channel, *encoder, payload, 3, &transmit_config));
