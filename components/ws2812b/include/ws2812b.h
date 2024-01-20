@@ -14,7 +14,7 @@ void init(void);
  * @brief Cycle trough colors in color buffer
  * @param[in] color_buffer Colors to be shown
  * @param[in] num_colors Number of colors in the buffer
- * @param[in] delay_ms Delay between switching color in ms
+ * @param[in] delay_ms Delay between switching color in 0.1 ms
  * @return
  */
-esp_err_t show_colors(led_color_t const* color_buffer, size_t num_colors, uint32_t delay_ms);
+esp_err_t show_colors(led_color_t const* color_buffer, size_t num_colors, uint32_t delay_01ms);

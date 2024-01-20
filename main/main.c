@@ -3,5 +3,5 @@
 
 void app_main(void) {
     init();
-    show_colors(color_buffer, NUM_COLORS, 1);
+    show_colors(color_buffer, NUM_COLORS, 50);
 }

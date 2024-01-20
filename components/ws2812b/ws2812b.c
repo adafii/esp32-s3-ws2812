@@ -10,8 +10,8 @@
 #define TX_QUEUE_DEPTH 8
 #define INTR_PRIORITY 0
 
-#define GPTIMER_RESOLUTION_HZ (1 * 1000 * 1000)  // 1 MHz, 1 tick = 1 µs
-#define TICKS_PER_MS (GPTIMER_RESOLUTION_HZ / (1 * 1000))
+#define GPTIMER_RESOLUTION_HZ (1 * 1000 * 1000)             // 1 MHz, 1 tick = 1 µs
+#define TICKS_PER_01MS (GPTIMER_RESOLUTION_HZ / (10 * 1000))  // Ticks per 0.1 ms
 
 static const char* TAG = "ws2812b_component";
 
@@ -42,17 +42,21 @@ void get_encoder(rmt_encoder_handle_t* encoder) {
 }
 
 // Init timer
-void get_timer(uint32_t delay_ms, gptimer_handle_t* gptimer) {
+void get_timer(uint32_t delay_01ms, gptimer_handle_t* gptimer) {
     const gptimer_config_t gptimer_config = {.clk_src = GPTIMER_CLK_SRC_DEFAULT,
                                              .direction = GPTIMER_COUNT_UP,
                                              .resolution_hz = GPTIMER_RESOLUTION_HZ,
                                              .intr_priority = 0};
 
     ESP_ERROR_CHECK(gptimer_new_timer(&gptimer_config, gptimer));
-    ESP_ERROR_CHECK(gptimer_set_raw_count(*gptimer, delay_ms * TICKS_PER_MS));  // Trigger alarm immediately on start
+    ESP_ERROR_CHECK(gptimer_set_raw_count(*gptimer, delay_01ms * TICKS_PER_01MS));  // Trigger alarm immediately on start
+
+    if (delay_01ms == 0) {
+        delay_01ms = 1;
+    }
 
     const gptimer_alarm_config_t alarm_config = {
-        .alarm_count = delay_ms * TICKS_PER_MS, .reload_count = 0, .flags.auto_reload_on_alarm = true};
+        .alarm_count = delay_01ms * TICKS_PER_01MS, .reload_count = 0, .flags.auto_reload_on_alarm = true};
 
     ESP_ERROR_CHECK(gptimer_set_alarm_action(*gptimer, &alarm_config));
 }
@@ -66,7 +70,7 @@ typedef struct {
     size_t current_color_index;
 } transmit_context_t;
 
-bool transmit_cb(gptimer_handle_t timer,
+bool transmit_cb(__attribute__((unused)) gptimer_handle_t timer,
                  __attribute__((unused)) const gptimer_alarm_event_data_t* edata,
                  void* user_ctx) {
     if (user_ctx == NULL) {
@@ -74,25 +78,16 @@ bool transmit_cb(gptimer_handle_t timer,
     }
 
     transmit_context_t* transmit_context = (transmit_context_t*)user_ctx;
+    size_t* current_color_index = &transmit_context->current_color_index;
 
-    rmt_channel_handle_t tx_channel = transmit_context->tx_channel;
-    rmt_encoder_handle_t encoder = transmit_context->encoder;
-    rmt_transmit_config_t* transmit_config = &transmit_context->transmit_config;
-    led_color_t const* color_buffer = transmit_context->color_buffer;
-    size_t* current_color_index = &(transmit_context->current_color_index);
-    size_t num_colors = transmit_context->num_colors;
+    led_color_t const* current_color = transmit_context->color_buffer + *current_color_index;
 
-    led_color_t const* current_color = color_buffer + *current_color_index;
-
-    ESP_ERROR_CHECK(rmt_transmit(tx_channel, encoder, current_color, sizeof(led_color_t), transmit_config));
+    ESP_ERROR_CHECK(rmt_transmit(transmit_context->tx_channel, transmit_context->encoder, current_color,
+                                 sizeof(led_color_t), &transmit_context->transmit_config));
 
     *current_color_index += 1;
-    if (*current_color_index >= num_colors) {  // last color was transmitted, clean up
-        ESP_ERROR_CHECK(gptimer_stop(timer));
-        ESP_ERROR_CHECK(gptimer_disable(timer));
-        ESP_ERROR_CHECK(gptimer_del_timer(timer));
-
-        free(transmit_context);
+    if (*current_color_index >= transmit_context->num_colors) {
+        *current_color_index = 0;
     }
 
     return false;
@@ -108,14 +103,14 @@ void init(void) {
     gpio_set_direction(GPIO_NUM, GPIO_MODE_OUTPUT);
 }
 
-esp_err_t show_colors(led_color_t const* color_buffer, size_t num_colors, uint32_t delay_ms) {
+esp_err_t show_colors(led_color_t const* color_buffer, size_t num_colors, uint32_t delay_01ms) {
     rmt_channel_handle_t tx_channel = NULL;
     rmt_encoder_handle_t encoder = NULL;
     gptimer_handle_t gptimer = NULL;
 
     get_tx_channel(&tx_channel);
     get_encoder(&encoder);
-    get_timer(delay_ms, &gptimer);
+    get_timer(delay_01ms, &gptimer);
 
     transmit_context_t* transmit_context = calloc(1, sizeof(transmit_context_t));
     ESP_RETURN_ON_FALSE(transmit_context, ESP_ERR_NO_MEM, TAG, "out of memory when creating transmit context");

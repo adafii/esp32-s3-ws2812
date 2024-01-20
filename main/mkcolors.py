@@ -1,22 +1,22 @@
 # Generates colors for the demo
 # usage: 'python mkcolors.py > demo_colors.h'
 
-from math import sin, pi
+from colorsys import hsv_to_rgb
 
-radians = [round(x * 0.001 * pi, 3) for x in range(0, 12000)]
+linspace = [(x * 0.0005) for x in range(0, 2000)]
 
 print('#include "color.h"')
 print()
-print(f'#define NUM_COLORS {len(radians)}')
+print(f'#define NUM_COLORS {len(linspace)}')
 print()
 
 print("static const led_color_t color_buffer[NUM_COLORS] = {")
 
-for rad in radians:
-    r = round((sin(rad * 1.0 + 0.0 * pi) + 1) * 127.5)
-    g = round((sin(rad * 0.5 + 0.5 * pi) + 1) * 127.5)
-    b = round((sin(rad * 0.2 + 1.0 * pi) + 1) * 127.5)
-
-    print("    {" + f'{r}, {g}, {b}' + "}, ")
+for h in linspace:
+    (r, g, b) = hsv_to_rgb(h, 1., 1.)
+    r = round(r * 255)
+    g = round(g * 255)
+    b = round(b * 255)
+    print("    {" + f'{g}, {r}, {b}' + "}, ")
 
 print("};")
