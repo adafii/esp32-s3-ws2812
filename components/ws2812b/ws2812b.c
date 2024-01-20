@@ -87,10 +87,11 @@ bool transmit_cb(gptimer_handle_t timer,
     ESP_ERROR_CHECK(rmt_transmit(tx_channel, encoder, current_color, sizeof(led_color_t), transmit_config));
 
     *current_color_index += 1;
-    if (*current_color_index >= num_colors) {  // last color was transmitted
+    if (*current_color_index >= num_colors) {  // last color was transmitted, clean up
         ESP_ERROR_CHECK(gptimer_stop(timer));
         ESP_ERROR_CHECK(gptimer_disable(timer));
         ESP_ERROR_CHECK(gptimer_del_timer(timer));
+
         free(transmit_context);
     }
 
