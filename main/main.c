@@ -1,11 +1,9 @@
 #include "ws2812b.h"
 
+#define NUM_COLORS 3
+static led_color_t const color_buffer[NUM_COLORS] = {{255, 255, 0}, {0, 255, 255}, {255, 0, 255}};
+
 void app_main(void) {
     init();
-
-    led_color_t const color_buffer[3] = {{255, 0, 0},
-                                         {0, 255, 0},
-                                         {0, 0, 255}};
-
-    show_colors(color_buffer, 3, 1000);
+    show_colors(color_buffer, NUM_COLORS, 3000);
 }

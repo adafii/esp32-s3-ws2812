@@ -17,4 +17,4 @@ void init(void);
  * @param[in] delay_ms Delay between switching color in ms
  * @return
  */
-esp_err_t show_colors(led_color_t const* color_buffer, size_t num_colors, uint16_t delay_ms);
+esp_err_t show_colors(led_color_t const* color_buffer, size_t num_colors, uint32_t delay_ms);

@@ -7,40 +7,7 @@ IndentWidth: 4
 UseTab: Never
 ColumnLimit: 120
 
-BreakBeforeBraces: Custom
-BraceWrapping:
-  AfterClass: false
-  AfterControlStatement: false
-  AfterEnum: false
-  AfterFunction: false
-  AfterNamespace: false
-  AfterObjCDeclaration: false
-  AfterStruct: false
-  AfterUnion: false
-  AfterExternBlock: false
-  BeforeCatch: false
-  BeforeElse: false
-  IndentBraces: false
-  SplitEmptyFunction: false
-  SplitEmptyRecord: false
-  SplitEmptyNamespace: false
-
-AlignConsecutiveAssignments: false
-AlignConsecutiveDeclarations: false
-AllowShortFunctionsOnASingleLine: false
-AllowAllParametersOfDeclarationOnNextLine: false
-AllowAllConstructorInitializersOnNextLine: false
-#ConstructorInitializerAllOnOneLineOrOnePerLine: true
-BinPackArguments: false
-BinPackParameters: false
-FixNamespaceComments: true
-NamespaceIndentation: Inner
-KeepEmptyLinesAtTheStartOfBlocks: true
-
-PenaltyBreakAssignment: 1000
-PenaltyBreakBeforeFirstCallParameter: 3000
-
-SortIncludes: true
+SortIncludes: "CaseInsensitive"
 IncludeBlocks: Merge
 IncludeCategories:
   - Regex: '^".*'
